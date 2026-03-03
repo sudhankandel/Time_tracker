@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Attendance Login</title>
+    <style>
+        body { display: flex; font-family: Arial; }
+        .left { width: 30%; border-right: 1px solid #ccc; padding: 20px; }
+        .right { width: 70%; padding: 20px; }
+        input[type="text"], input[type="number"] { width: 100%; padding: 5px; margin: 5px 0; }
+        button { padding: 5px 10px; margin-top: 10px; }
+        .user-item { cursor: pointer; padding: 5px; border-bottom: 1px solid #eee; }
+        .user-item:hover { background: #f0f0f0; }
+    </style>
+</head>
+<body>
+    <div class="left">
+        <h3>Search User</h3>
+        <input type="text" id="searchInput" placeholder="Type to search...">
+        <ul id="userList">
+            {% for user in users %}
+                <li class="user-item" data-username="{{ user.username }}" data-id="{{ user.id }}"
+                    onclick="selectUser('{{ user.id }}', '{{ user.username }}')">
+                    {{ user.username }}
+                </li>
+            {% empty %}
+                <li>No users found</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="right">
+        <h3>Selected User: <span id="selected_name">None</span></h3>
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="user_id" id="selected_user">
+            <label>Enter 4-digit code:</label>
+            <input type="number" name="employee_code" required>
+            <button type="submit">Login</button>
+        </form>
+        {% if messages %}
+            <ul>
+                {% for message in messages %}
+                    <li style="color:red;">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+
+    <script>
+        const searchInput = document.getElementById('searchInput');
+        const userList = document.getElementById('userList');
+        const users = userList.getElementsByTagName('li');
+
+        searchInput.addEventListener('keyup', function() {
+            const filter = searchInput.value.toLowerCase();
+            for (let i = 0; i < users.length; i++) {
+                const username = users[i].getAttribute('data-username').toLowerCase();
+                if (username.includes(filter)) {
+                    users[i].style.display = '';
+                } else {
+                    users[i].style.display = 'none';
+                }
+            }
+        });
+
+        function selectUser(id, username) {
+            document.getElementById('selected_user').value = id;
+            document.getElementById('selected_name').innerText = username;
+        }
+    </script>
+</body>
+</html>

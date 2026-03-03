@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Attendance System</title>
+    <style>
+        body { display: flex; font-family: Arial; }
+        .left { width: 30%; border-right: 1px solid #ccc; padding: 20px; }
+        .right { width: 70%; padding: 20px; }
+        input { width: 100%; padding: 5px; margin: 5px 0; }
+        button { padding: 6px 12px; margin-top: 5px; }
+        .user-item { cursor: pointer; padding: 5px; border-bottom: 1px solid #eee; }
+        .user-item:hover { background: #f0f0f0; }
+        table { border-collapse: collapse; width: 100%; margin-top: 15px; }
+        th, td { border: 1px solid #ccc; padding: 6px; }
+    </style>
+</head>
+<body>
+
+<!-- LEFT SIDE -->
+<div class="left">
+    <h3>Search User</h3>
+    <input type="text" id="searchInput" placeholder="Type to search...">
+
+    <ul id="userList">
+        {% for user in users %}
+            <li class="user-item"
+                data-username="{{ user.username }}"
+                onclick="selectUser('{{ user.id }}', '{{ user.username }}')">
+                {{ user.username }}
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+
+<!-- RIGHT SIDE -->
+<div class="right">
+
+{% if not is_logged_in %}
+
+    <!-- LOGIN AREA -->
+    <h3>Selected User: <span id="selected_name">None</span></h3>
+
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="user_id" id="selected_user">
+
+        <label>Enter 4-digit code:</label>
+        <input type="number" name="employee_code" required>
+
+        <button type="submit">Login</button>
+    </form>
+
+    {% if messages %}
+        {% for message in messages %}
+            <p style="color:red;">{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+
+{% else %}
+
+    <!-- DASHBOARD AREA -->
+  <h2>Welcome {{ selected_user.username }}</h2>
+
+<form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="user_id" value="{{ selected_user.id }}">
+    <input type="hidden" name="employee_code" value="{{ selected_user.employee_code }}">
+
+    {% if not active_shift %}
+        <button type="submit" name="start_shift">Start Shift</button>
+
+    {% else %}
+
+        {% if active_break %}
+            <button type="submit" name="end_break">End Break</button>
+        {% else %}
+            <button type="submit" name="start_break">Start Break</button>
+            <button type="submit" name="end_shift">End Shift</button>
+        {% endif %}
+
+    {% endif %}
+</form>
+
+<hr>
+
+<h3>Shift History</h3>
+
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Clock In</th>
+        <th>Clock Out</th>
+        <th>Total Hours</th>
+    </tr>
+
+    {% for shift in shifts %}
+    <tr>
+        <td>{{ shift.id }}</td>
+        <td>{{ shift.clock_in_time }}</td>
+        <td>
+            {% if shift.clock_out_time %}
+                {{ shift.clock_out_time }}
+            {% else %}
+                Running
+            {% endif %}
+        </td>
+        <td>{{ shift.total_hours }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% endif %}
+
+</div>
+
+<script>
+    const searchInput = document.getElementById('searchInput');
+    const users = document.querySelectorAll('.user-item');
+
+    searchInput.addEventListener('keyup', function() {
+        const filter = this.value.toLowerCase();
+        users.forEach(function(user) {
+            const name = user.getAttribute('data-username').toLowerCase();
+            user.style.display = name.includes(filter) ? "" : "none";
+        });
+    });
+
+    function selectUser(id, username) {
+        document.getElementById('selected_user').value = id;
+        document.getElementById('selected_name').innerText = username;
+    }
+</script>
+
+</body>
+</html>

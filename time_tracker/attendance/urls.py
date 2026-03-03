@@ -1,11 +1,12 @@
 from django.urls import path
 from . import views
 
+app_name = 'attendance'
+
 urlpatterns = [
-    path("login/", views.login_by_code, name="login_by_code"),
-    path("dashboard/", views.dashboard, name="dashboard"),
-    path("clock_in/", views.clock_in, name="clock_in"),
-    path("clock_out/<int:shift_id>/", views.clock_out, name="clock_out"),
-    path("start_break/<int:shift_id>/", views.start_break, name="start_break"),
-    path("end_break/<int:break_id>/", views.end_break, name="end_break"),
+    path('', views.attendance_home, name='attendance_home'),  # dashboard
+    path('shift/<int:shift_id>/clock_in/', views.clock_in, name='clock_in'),
+    path('shift/<int:shift_id>/clock_out/', views.clock_out, name='clock_out'),
+    path('shift/<int:shift_id>/break/<str:break_type>/start/', views.start_break, name='start_break'),
+    path('shift/<int:shift_id>/break/<str:break_type>/end/', views.end_break, name='end_break'),
 ]

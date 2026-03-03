@@ -4,16 +4,14 @@
     <title>Login by Code</title>
 </head>
 <body>
-    <h2>User Login</h2>
-    <form method="POST">
-        {% csrf_token %}
-        <label>Enter 4-digit code:</label>
-        <input type="text" name="code" maxlength="4" required>
-        <button type="submit">Login</button>
-    </form>
-
+    <h1>Login</h1>
     {% if error %}
         <p style="color:red">{{ error }}</p>
     {% endif %}
+    <form method="POST">
+        {% csrf_token %}
+        <input type="text" name="code" placeholder="Enter your 4-digit code" required>
+        <button type="submit">Login</button>
+    </form>
 </body>
 </html>

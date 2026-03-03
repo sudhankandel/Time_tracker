@@ -1,31 +1,40 @@
-<h2>Welcome {{ user.username }}</h2>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+</head>
+<body>
+    <h1>Welcome {{ user.username }}</h1>
 
-{% if not active_shift %}
-    <a href="{% url 'clock_in' %}">Clock In</a>
-{% else %}
-    <p>Active Shift Started: {{ active_shift.clock_in_time }}</p>
-    <a href="{% url 'clock_out' active_shift.id %}">Clock Out</a>
-
-    {% if not active_break %}
-        <form method="post" action="{% url 'start_break' active_shift.id %}">
-            {% csrf_token %}
-            <select name="break_type">
-                <option value="PAID">Paid Break</option>
-                <option value="UNPAID">Unpaid Break</option>
-            </select>
-            <button type="submit">Start Break</button>
-        </form>
-    {% else %}
-        <p>Ongoing Break: {{ active_break.break_type }} | Started at {{ active_break.start_time }}</p>
-        <a href="{% url 'end_break' active_break.id %}">End Break</a>
-    {% endif %}
-{% endif %}
-
-<h3>Previous Shifts:</h3>
-<ul>
-    {% for shift in shifts %}
-        <li>
-            {{ shift.created_at }} - Total Hours: {{ shift.actual_working_duration }}
-        </li>
-    {% endfor %}
-</ul>
+    <h2>Your Shifts</h2>
+    <table border="1">
+        <tr>
+            <th>Shift ID</th>
+            <th>Clock In</th>
+            <th>Clock Out</th>
+            <th>Total Hours</th>
+            <th>Actions</th>
+        </tr>
+        {% for shift in shifts %}
+        <tr>
+            <td>{{ shift.id }}</td>
+            <td>{{ shift.clock_in_time }}</td>
+            <td>{{ shift.clock_out_time }}</td>
+            <td>{{ shift.total_hours }}</td>
+            <td>
+                {% if not shift.clock_in_time %}
+                    <a href="{% url 'clock_in' shift.id %}">Clock In</a>
+                {% endif %}
+                {% if shift.clock_in_time and not shift.clock_out_time %}
+                   <a href="{% url 'clock_out' shift.id %}">Clock Out</a>
+                    <a href="{% url 'start_break' shift.id 'paid' %}">Start Paid Break</a>
+                    <a href="{% url 'end_break' shift.id 'paid' %}">End Paid Break</a>
+                    <a href="{% url 'start_break' shift.id 'unpaid' %}">Start Unpaid Break</a>
+                    <a href="{% url 'end_break' shift.id 'unpaid' %}">End Unpaid Break</a>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
