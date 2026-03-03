@@ -23,17 +23,14 @@ class Shift(models.Model):
     def __str__(self):
         return f"{self.user.username} - {self.created_at}"
 
-    # ✅ Check if shift is active
     def is_active(self):
         return self.clock_in_time and not self.clock_out_time
 
-    # ✅ Total shift duration
     def total_shift_duration(self):
         if self.clock_in_time and self.clock_out_time:
             return self.clock_out_time - self.clock_in_time
         return timedelta(0)
 
-    # ✅ Total unpaid break duration
     def total_unpaid_break(self):
         unpaid_breaks = self.breaks.filter(
             break_type="UNPAID",
@@ -44,11 +41,9 @@ class Shift(models.Model):
             total += b.duration()
         return total
 
-    # ✅ Actual working duration
     def actual_working_duration(self):
         return self.total_shift_duration() - self.total_unpaid_break()
 
-    # ✅ Calculate daily pay
     def calculate_daily_pay(self):
         actual_duration = self.actual_working_duration()
         hours = actual_duration.total_seconds() / 3600

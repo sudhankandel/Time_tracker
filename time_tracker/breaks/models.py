@@ -1,7 +1,6 @@
 from django.db import models
 from django.utils import timezone
 
-
 class Break(models.Model):
 
     BREAK_TYPE = (
@@ -10,16 +9,12 @@ class Break(models.Model):
     )
 
     shift = models.ForeignKey(
-        "attendance.Shift",   # ✅ VERY IMPORTANT
+        "attendance.Shift",  # string reference to avoid circular import
         on_delete=models.CASCADE,
         related_name="breaks"
     )
 
-    break_type = models.CharField(
-        max_length=10,
-        choices=BREAK_TYPE
-    )
-
+    break_type = models.CharField(max_length=10, choices=BREAK_TYPE)
     start_time = models.DateTimeField(default=timezone.now)
     end_time = models.DateTimeField(null=True, blank=True)
 

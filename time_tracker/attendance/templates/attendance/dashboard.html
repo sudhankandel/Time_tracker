@@ -1,0 +1,31 @@
+<h2>Welcome {{ user.username }}</h2>
+
+{% if not active_shift %}
+    <a href="{% url 'clock_in' %}">Clock In</a>
+{% else %}
+    <p>Active Shift Started: {{ active_shift.clock_in_time }}</p>
+    <a href="{% url 'clock_out' active_shift.id %}">Clock Out</a>
+
+    {% if not active_break %}
+        <form method="post" action="{% url 'start_break' active_shift.id %}">
+            {% csrf_token %}
+            <select name="break_type">
+                <option value="PAID">Paid Break</option>
+                <option value="UNPAID">Unpaid Break</option>
+            </select>
+            <button type="submit">Start Break</button>
+        </form>
+    {% else %}
+        <p>Ongoing Break: {{ active_break.break_type }} | Started at {{ active_break.start_time }}</p>
+        <a href="{% url 'end_break' active_break.id %}">End Break</a>
+    {% endif %}
+{% endif %}
+
+<h3>Previous Shifts:</h3>
+<ul>
+    {% for shift in shifts %}
+        <li>
+            {{ shift.created_at }} - Total Hours: {{ shift.actual_working_duration }}
+        </li>
+    {% endfor %}
+</ul>
