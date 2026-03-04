@@ -59,55 +59,25 @@
 {% else %}
 
     <!-- DASHBOARD AREA -->
-  <h2>Welcome {{ selected_user.username }}</h2>
+    <h2>Welcome {{ selected_user.username }}</h2>
 
-<form method="post">
-    {% csrf_token %}
-    <input type="hidden" name="user_id" value="{{ selected_user.id }}">
-    <input type="hidden" name="employee_code" value="{{ selected_user.employee_code }}">
+    <table>
+        <tr>
+            <th>Shift ID</th>
+            <th>Clock In</th>
+            <th>Clock Out</th>
+            <th>Total Hours</th>
+        </tr>
 
-    {% if not active_shift %}
-        <button type="submit" name="start_shift">Start Shift</button>
-
-    {% else %}
-
-        {% if active_break %}
-            <button type="submit" name="end_break">End Break</button>
-        {% else %}
-            <button type="submit" name="start_break">Start Break</button>
-            <button type="submit" name="end_shift">End Shift</button>
-        {% endif %}
-
-    {% endif %}
-</form>
-
-<hr>
-
-<h3>Shift History</h3>
-
-<table>
-    <tr>
-        <th>ID</th>
-        <th>Clock In</th>
-        <th>Clock Out</th>
-        <th>Total Hours</th>
-    </tr>
-
-    {% for shift in shifts %}
-    <tr>
-        <td>{{ shift.id }}</td>
-        <td>{{ shift.clock_in_time }}</td>
-        <td>
-            {% if shift.clock_out_time %}
-                {{ shift.clock_out_time }}
-            {% else %}
-                Running
-            {% endif %}
-        </td>
-        <td>{{ shift.total_hours }}</td>
-    </tr>
-    {% endfor %}
-</table>
+        {% for shift in shifts %}
+        <tr>
+            <td>{{ shift.id }}</td>
+            <td>{{ shift.clock_in_time }}</td>
+            <td>{{ shift.clock_out_time|default:"Running" }}</td>
+            <td>{{ shift.total_hours }}</td>
+        </tr>
+        {% endfor %}
+    </table>
 
 {% endif %}
 

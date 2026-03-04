@@ -4,59 +4,38 @@ from attendance.models import Shift
 from breaks.models import Break
 from django.utils import timezone
 
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render
 from django.contrib import messages
-from django.utils import timezone
-from .models import Shift
-from breaks.models import Break
 from accounts.models import CustomUser
+from attendance.models import Shift
 
 def attendance_home(request):
-    users = CustomUser.objects.all()
-    query = request.GET.get('q', '')
-
-    if query:
-        users = users.filter(username__icontains=query)
+    users = CustomUser.objects.filter(is_staff=False)
+    selected_user = None
+    shifts = None
+    is_logged_in = False
 
     if request.method == "POST":
-        user_id = request.POST.get('user_id')
-        code = request.POST.get('employee_code')
+        user_id = request.POST.get("user_id")
+        code = request.POST.get("employee_code")
 
-        if not user_id:
-            messages.error(request, "Please select a user first.")
-            return render(request, "attendance/home.html", {"users": users, "query": query})
+        if user_id and code:
+            try:
+                selected_user = CustomUser.objects.get(
+                    id=user_id,
+                    employee_code=code
+                )
+                shifts = Shift.objects.filter(user=selected_user).order_by("-clock_in_time")
+                is_logged_in = True
+            except CustomUser.DoesNotExist:
+                messages.error(request, "Invalid 4-digit code")
 
-        user = get_object_or_404(CustomUser, id=user_id)
-
-        if str(user.employee_code) != str(code):
-            messages.error(request, "Incorrect code!")
-            return render(request, "attendance/home.html", {"users": users, "query": query})
-
-        # Fetch active shift or create a new one
-        active_shift = user.shifts.filter(clock_out_time__isnull=True).first()
-        if not active_shift:
-            active_shift = Shift.objects.create(user=user, clock_in_time=timezone.now())
-
-        # Calculate total hours including breaks
-        total_break = sum(b.duration() for b in active_shift.breaks.all())
-        total_hours = 0
-        if active_shift.clock_in_time:
-            end_time = active_shift.clock_out_time or timezone.now()
-            total_hours = (end_time - active_shift.clock_in_time).total_seconds() / 3600  # in hours
-            total_hours -= total_break  # subtract breaks
-
-        context = {
-            "users": users,
-            "query": query,
-            "user": user,
-            "shifts": user.shifts.all().order_by("-clock_in_time"),
-            "active_shift": active_shift,
-            "total_hours": round(total_hours, 2),
-        }
-        return render(request, "attendance/dashboard.html", context)
-
-    return render(request, "attendance/home.html", {"users": users, "query": query})
-
+    return render(request, "attendance/home.html", {
+        "users": users,
+        "selected_user": selected_user,
+        "shifts": shifts,
+        "is_logged_in": is_logged_in
+    })
 
 def clock_in(request, shift_id):
     shift = get_object_or_404(Shift, id=shift_id)
