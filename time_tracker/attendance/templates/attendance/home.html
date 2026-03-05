@@ -24,6 +24,7 @@
     <ul id="userList">
         {% for user in users %}
             <li class="user-item"
+                data-user-id="{{ user.id }}"
                 data-username="{{ user.username }}"
                 onclick="selectUser('{{ user.id }}', '{{ user.username }}')">
                 {{ user.username }}
@@ -33,118 +34,114 @@
 </div>
 
 <!-- RIGHT SIDE -->
-<div class="right">
+<div class="right" id="rightSide">
 
-{% if not is_logged_in %}
+    {% if not is_logged_in %}
 
-    <!-- LOGIN AREA -->
-    <h3>Selected User: <span id="selected_name">None</span></h3>
-
-    <form method="post">
-        {% csrf_token %}
-        <input type="hidden" name="user_id" id="selected_user">
-
-        <label>Enter 4-digit code:</label>
-        <input type="number" name="employee_code" required>
-
-        <button type="submit">Login</button>
-    </form>
-
-    {% if messages %}
-        {% for message in messages %}
-            <p style="color:red;">{{ message }}</p>
-        {% endfor %}
-    {% endif %}
-
-{% else %}
-
-    <!-- DASHBOARD -->
-    <h2>Welcome {{ selected_user.username }}</h2>
-
-    <!-- Manual Logout -->
-    <form method="post" action="{% url 'logout_user' %}" style="float:right;">
-        {% csrf_token %}
-        <button type="submit">Logout</button>
-    </form>
-
-    {% with current_shift=shifts.first %}
-
-        {% if not current_shift or current_shift.clock_out_time %}
-            <!-- START SHIFT -->
-            <form method="post" action="{% url 'create_shift' %}">
-                {% csrf_token %}
-                <button type="submit">Start Shift</button>
-            </form>
-
-        {% else %}
-
-            <!-- SHIFT RUNNING -->
-            <p><strong>Shift Started:</strong> {{ current_shift.clock_in_time }}</p>
-
-            <h4>Breaks</h4>
-
-            <a href="{% url 'start_break' current_shift.id 'paid' %}">
-                <button>Start Paid Break</button>
-            </a>
-
-            <a href="{% url 'start_break' current_shift.id 'unpaid' %}">
-                <button>Start Unpaid Break</button>
-            </a>
-
-            <a href="{% url 'end_break' current_shift.id 'paid' %}">
-                <button>End Paid Break</button>
-            </a>
-
-            <a href="{% url 'end_break' current_shift.id 'unpaid' %}">
-                <button>End Unpaid Break</button>
-            </a>
-
-            <br><br>
-
-            <a href="{% url 'clock_out' current_shift.id %}">
-                <button>End Shift</button>
-            </a>
-
+        {% if not selected_user_id and not messages %}
+            <!-- Placeholder only if no user selected and no messages -->
+            <p id="placeholder" style="color:#888; font-style:italic;">
+                Please select a user from the left to continue.
+            </p>
         {% endif %}
 
-    {% endwith %}
+        <!-- LOGIN AREA -->
+        <div id="loginArea" style="{% if selected_user_id or messages %}display:block{% else %}display:none{% endif %}">
+            <h3>Selected User: <span id="selected_name">{% if selected_user_username %}{{ selected_user_username }}{% else %}None{% endif %}</span></h3>
 
-    <hr>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="user_id" id="selected_user" value="{{ selected_user_id }}">
 
-    <h3>Previous Shifts</h3>
+                <label>Enter 4-digit code:</label>
+                <input type="number" name="employee_code" required>
 
-    <table>
-        <tr>
-            <th>Day</th>
-            <th>Clock In</th>
-            <th>Clock Out</th>
-            <th>Total Hours</th>
-            <th>Total Pay</th>
-        </tr>
+                <button type="submit">Login</button>
+            </form>
 
-        {% for shift in shifts %}
-        <tr>
-            <td>{{ shift.clock_in_time|date:"l" }}</td>
-            <td>{{ shift.clock_in_time }}</td>
-            <td>{{ shift.clock_out_time|default:"Running" }}</td>
-            <td>{{ shift.total_hours }}</td>
-            <td>{{ shift.total_pay }}</td>
-        </tr>
-        {% endfor %}
-    </table>
+            {% if messages %}
+                {% for message in messages %}
+                    <p style="color:red;">{{ message }}</p>
+                {% endfor %}
+            {% endif %}
+        </div>
 
-    <!-- AUTO LOGOUT AFTER 20 SECONDS (FOR ANY LOGGED USER) -->
-    <form id="autoLogoutForm" method="post" action="{% url 'logout_user' %}">
-        {% csrf_token %}
-    </form>
+    {% else %}
+        <!-- DASHBOARD FOR LOGGED-IN USER -->
+        <div id="dashboard">
+            <h2>Welcome {{ selected_user.username }}</h2>
 
-    <script>
-        setTimeout(function() {
-            document.getElementById("autoLogoutForm").submit();
-        }, 20000); // 20 seconds
-    </script>
+            <!-- Manual Logout -->
+            <form method="post" action="{% url 'logout_user' %}" style="float:right;">
+                {% csrf_token %}
+                <button type="submit">Logout</button>
+            </form>
 
-{% endif %}
+            {% with current_shift=shifts.first %}
+                {% if not current_shift or current_shift.clock_out_time %}
+                    <!-- START SHIFT -->
+                    <form method="post" action="{% url 'create_shift' %}">
+                        {% csrf_token %}
+                        <button type="submit">Start Shift</button>
+                    </form>
+                {% else %}
+                    <!-- SHIFT RUNNING -->
+                    <p><strong>Shift Started:</strong> {{ current_shift.clock_in_time }}</p>
+
+                    <h4>Breaks</h4>
+                    <a href="{% url 'start_break' current_shift.id 'paid' %}">
+                        <button>Start Paid Break</button>
+                    </a>
+                    <a href="{% url 'start_break' current_shift.id 'unpaid' %}">
+                        <button>Start Unpaid Break</button>
+                    </a>
+                    <a href="{% url 'end_break' current_shift.id 'paid' %}">
+                        <button>End Paid Break</button>
+                    </a>
+                    <a href="{% url 'end_break' current_shift.id 'unpaid' %}">
+                        <button>End Unpaid Break</button>
+                    </a>
+
+                    <br><br>
+                    <a href="{% url 'clock_out' current_shift.id %}">
+                        <button>End Shift</button>
+                    </a>
+                {% endif %}
+            {% endwith %}
+
+            <hr>
+            <h3>Previous Shifts</h3>
+            <table>
+                <tr>
+                    <th>Day</th>
+                    <th>Clock In</th>
+                    <th>Clock Out</th>
+                    <th>Total Hours</th>
+                    <th>Total Pay</th>
+                </tr>
+                {% for shift in shifts %}
+                <tr>
+                    <td>{{ shift.clock_in_time|date:"l" }}</td>
+                    <td>{{ shift.clock_in_time }}</td>
+                    <td>{{ shift.clock_out_time|default:"Running" }}</td>
+                    <td>{{ shift.total_hours }}</td>
+                    <td>{{ shift.total_pay }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+
+            <!-- AUTO LOGOUT AFTER 20 SECONDS -->
+            <form id="autoLogoutForm" method="post" action="{% url 'logout_user' %}">
+                {% csrf_token %}
+            </form>
+
+            <script>
+                setTimeout(function() {
+                    document.getElementById("autoLogoutForm").submit();
+                }, 20000);
+            </script>
+        </div>
+    {% endif %}
 
 </div>
 
@@ -163,6 +160,12 @@
     function selectUser(id, username) {
         document.getElementById('selected_user').value = id;
         document.getElementById('selected_name').innerText = username;
+
+        // Show login area and hide placeholder
+        const loginArea = document.getElementById('loginArea');
+        const placeholder = document.getElementById('placeholder');
+        if (loginArea) loginArea.style.display = 'block';
+        if (placeholder) placeholder.style.display = 'none';
     }
 </script>
 

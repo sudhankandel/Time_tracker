@@ -163,6 +163,9 @@ def end_break(request, shift_id, break_type):
 # ==========================================
 # LOGOUT (Optional but recommended)
 # ==========================================
+from django.views.decorators.http import require_POST
+
+@require_POST
 def logout_user(request):
     request.session.flush()
     return redirect("attendance_home")
