@@ -58,31 +58,29 @@
 
 {% else %}
 
-   <h2>Welcome {{ user.username }}</h2>
+    <!-- DASHBOARD -->
+    <h2>Welcome {{ selected_user.username }}</h2>
 
-{% with current_shift=shifts.first %}
+    <!-- Manual Logout -->
+    <form method="post" action="{% url 'logout_user' %}" style="float:right;">
+        {% csrf_token %}
+        <button type="submit">Logout</button>
+    </form>
 
-    {% if not current_shift or current_shift.clock_out_time %}
-        <!-- START SHIFT BUTTON -->
-        <form method="post" action="{% url 'create_shift' %}">
-            {% csrf_token %}
-            <button type="submit">Start Shift</button>
-        </form>
+    {% with current_shift=shifts.first %}
 
-    {% else %}
-        <!-- SHIFT IS RUNNING -->
-        <p><strong>Shift Started:</strong> {{ current_shift.clock_in_time }}</p>
+        {% if not current_shift or current_shift.clock_out_time %}
+            <!-- START SHIFT -->
+            <form method="post" action="{% url 'create_shift' %}">
+                {% csrf_token %}
+                <button type="submit">Start Shift</button>
+            </form>
 
-        {% if not current_shift.clock_in_time %}
-            <!-- CLOCK IN -->
-            <a href="{% url 'clock_in' current_shift.id %}">
-                <button>Clock In</button>
-            </a>
-        {% endif %}
+        {% else %}
 
-        {% if not current_shift.clock_out_time %}
+            <!-- SHIFT RUNNING -->
+            <p><strong>Shift Started:</strong> {{ current_shift.clock_in_time }}</p>
 
-            <!-- BREAK BUTTONS -->
             <h4>Breaks</h4>
 
             <a href="{% url 'start_break' current_shift.id 'paid' %}">
@@ -103,40 +101,48 @@
 
             <br><br>
 
-            <!-- END SHIFT -->
             <a href="{% url 'clock_out' current_shift.id %}">
                 <button>End Shift</button>
             </a>
 
         {% endif %}
 
-    {% endif %}
+    {% endwith %}
 
-{% endwith %}
+    <hr>
 
-<hr>
+    <h3>Previous Shifts</h3>
 
-<h3>Previous Shifts</h3>
+    <table>
+        <tr>
+            <th>Day</th>
+            <th>Clock In</th>
+            <th>Clock Out</th>
+            <th>Total Hours</th>
+            <th>Total Pay</th>
+        </tr>
 
-<table>
-    <tr>
-        <th>Shift ID</th>
-        <th>Clock In</th>
-        <th>Clock Out</th>
-        <th>Total Hours</th>
-        <th>Total Pay</th>
-    </tr>
+        {% for shift in shifts %}
+        <tr>
+            <td>{{ shift.clock_in_time|date:"l" }}</td>
+            <td>{{ shift.clock_in_time }}</td>
+            <td>{{ shift.clock_out_time|default:"Running" }}</td>
+            <td>{{ shift.total_hours }}</td>
+            <td>{{ shift.total_pay }}</td>
+        </tr>
+        {% endfor %}
+    </table>
 
-    {% for shift in shifts %}
-    <tr>
-       <td>{{ shift.clock_in_time|date:"l" }}</td>
-        <td>{{ shift.clock_in_time }}</td>
-        <td>{{ shift.clock_out_time|default:"Running" }}</td>
-        <td>{{ shift.total_hours }}</td>
-        <td>{{ shift.total_pay }}</td>
-    </tr>
-    {% endfor %}
-</table>
+    <!-- AUTO LOGOUT AFTER 20 SECONDS (FOR ANY LOGGED USER) -->
+    <form id="autoLogoutForm" method="post" action="{% url 'logout_user' %}">
+        {% csrf_token %}
+    </form>
+
+    <script>
+        setTimeout(function() {
+            document.getElementById("autoLogoutForm").submit();
+        }, 20000); // 20 seconds
+    </script>
 
 {% endif %}
 
